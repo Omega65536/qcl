@@ -1,0 +1,2 @@
+# qcl
+Quick Calculation Language
