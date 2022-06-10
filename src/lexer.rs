@@ -57,11 +57,9 @@ impl Lexer {
                     self.advance();
                     return self.next_token();
                 }
-
                 if ch.is_digit(10) {
                     return self.next_number();
                 }
-
                 let token = match ch {
                     '+' => Token::new(TokenType::Plus, self.index, self.index),
                     '-' => Token::new(TokenType::Minus, self.index, self.index),
