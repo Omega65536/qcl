@@ -1,17 +1,17 @@
 use std::fmt;
 
 #[derive(Debug)]
-pub struct ParserError {
+pub struct SyntaxError {
     message: String,
 }
 
-impl ParserError {
-    pub fn new(message: String) -> ParserError {
-        ParserError { message }
+impl SyntaxError {
+    pub fn new(message: String) -> SyntaxError {
+        SyntaxError { message }
     }
 }
 
-impl fmt::Display for ParserError {
+impl fmt::Display for SyntaxError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "ParserError: {}", self.message)
     }

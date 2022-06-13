@@ -1,5 +1,6 @@
-use std::rc::Rc;
 use crate::span::{Span, Spanned};
+use crate::syntax_error::SyntaxError;
+use std::rc::Rc;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
@@ -27,21 +28,21 @@ impl Lexer {
         }
     }
 
-    pub fn lex(&mut self) -> Vec<Spanned<Token>> {
+    pub fn lex(&mut self) -> Result<Vec<Spanned<Token>>, SyntaxError> {
         let mut tokens = Vec::new();
         loop {
-            let next_token = self.next_token();
+            let next_token = self.next_token()?;
             match next_token.item {
                 Token::End => {
                     tokens.push(next_token);
-                    return tokens;
-                },
-                _ => tokens.push(next_token)
-            }   
+                    return Ok(tokens);
+                }
+                _ => tokens.push(next_token),
+            }
         }
     }
 
-    pub fn next_token(&mut self) -> Spanned<Token> {
+    pub fn next_token(&mut self) -> Result<Spanned<Token>, SyntaxError> {
         let token = match self.peek() {
             Some(ch) => {
                 if *ch == ' ' {
@@ -52,23 +53,41 @@ impl Lexer {
                     return self.next_number();
                 }
                 let token = match ch {
-                    '+' => Spanned::new(Token::Plus, Span::new(self.source.clone(), self.index, self.index)),
-                    '-' => Spanned::new(Token::Minus, Span::new(self.source.clone(), self.index, self.index)),
-                    '*' => Spanned::new(Token::Star, Span::new(self.source.clone(), self.index, self.index)),
-                    '/' => Spanned::new(Token::Slash, Span::new(self.source.clone(), self.index, self.index)),
-                    _ => Spanned::new(Token::Unknown(ch.to_string()), Span::new(self.source.clone(), self.index, self.index)),
+                    '+' => Spanned::new(
+                        Token::Plus,
+                        Span::new(self.source.clone(), self.index, self.index),
+                    ),
+                    '-' => Spanned::new(
+                        Token::Minus,
+                        Span::new(self.source.clone(), self.index, self.index),
+                    ),
+                    '*' => Spanned::new(
+                        Token::Star,
+                        Span::new(self.source.clone(), self.index, self.index),
+                    ),
+                    '/' => Spanned::new(
+                        Token::Slash,
+                        Span::new(self.source.clone(), self.index, self.index),
+                    ),
+                    _ => Spanned::new(
+                        Token::Unknown(ch.to_string()),
+                        Span::new(self.source.clone(), self.index, self.index),
+                    ),
                 };
                 self.advance();
                 token
             }
             None => {
-                return Spanned::new(Token::End, Span::new(self.source.clone(), self.index, self.index));
+                return Ok(Spanned::new(
+                    Token::End,
+                    Span::new(self.source.clone(), self.index, self.index),
+                ));
             }
         };
-        token
+        Ok(token)
     }
 
-    pub fn next_number(&mut self) -> Spanned<Token> {
+    pub fn next_number(&mut self) -> Result<Spanned<Token>, SyntaxError> {
         let start_index = self.index;
         let mut string = String::new();
         while let Some(ch) = self.peek() {
@@ -91,7 +110,10 @@ impl Lexer {
                 self.advance();
             }
         }
-        Spanned::new(Token::Number(string), Span::new(self.source.clone(), start_index, self.index - 1))
+        Ok(Spanned::new(
+            Token::Number(string),
+            Span::new(self.source.clone(), start_index, self.index - 1),
+        ))
     }
 
     pub fn advance(&mut self) {

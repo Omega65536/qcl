@@ -4,30 +4,23 @@ use std::rc::Rc;
 pub struct Span {
     pub source: Rc<String>,
     pub start: usize,
-    pub end: usize
+    pub end: usize,
 }
 
 #[derive(Debug, Clone)]
 pub struct Spanned<T> {
     pub item: T,
-    pub span: Span
+    pub span: Span,
 }
 
 impl Span {
     pub fn new(source: Rc<String>, start: usize, end: usize) -> Span {
-        Span {
-            source,
-            start,
-            end
-        }
+        Span { source, start, end }
     }
 }
 
 impl<T> Spanned<T> {
     pub fn new(item: T, span: Span) -> Spanned<T> {
-        Spanned {
-            item,
-            span
-        }
+        Spanned { item, span }
     }
 }
