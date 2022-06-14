@@ -1,17 +1,7 @@
+use crate::qcl_error::QclError;
 use crate::span::{Span, Spanned};
-use crate::syntax_error::SyntaxError;
+use crate::token::Token;
 use std::rc::Rc;
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum Token {
-    Unknown(String),
-    End,
-    Number(String),
-    Plus,
-    Minus,
-    Star,
-    Slash,
-}
 
 pub struct Lexer {
     chars: Vec<char>,
@@ -28,7 +18,7 @@ impl Lexer {
         }
     }
 
-    pub fn lex(&mut self) -> Result<Vec<Spanned<Token>>, SyntaxError> {
+    pub fn lex(&mut self) -> Result<Vec<Spanned<Token>>, QclError> {
         let mut tokens = Vec::new();
         loop {
             let next_token = self.next_token()?;
@@ -42,7 +32,7 @@ impl Lexer {
         }
     }
 
-    pub fn next_token(&mut self) -> Result<Spanned<Token>, SyntaxError> {
+    pub fn next_token(&mut self) -> Result<Spanned<Token>, QclError> {
         let token = match self.peek() {
             Some(ch) => {
                 if *ch == ' ' {
@@ -69,10 +59,11 @@ impl Lexer {
                         Token::Slash,
                         Span::new(self.source.clone(), self.index, self.index),
                     ),
-                    _ => Spanned::new(
-                        Token::Unknown(ch.to_string()),
-                        Span::new(self.source.clone(), self.index, self.index),
-                    ),
+                    _ => {
+                        return Err(QclError::SyntaxError(
+                            "Could not handle character".to_string(),
+                        ))
+                    }
                 };
                 self.advance();
                 token
@@ -87,7 +78,7 @@ impl Lexer {
         Ok(token)
     }
 
-    pub fn next_number(&mut self) -> Result<Spanned<Token>, SyntaxError> {
+    pub fn next_number(&mut self) -> Result<Spanned<Token>, QclError> {
         let start_index = self.index;
         let mut string = String::new();
         while let Some(ch) = self.peek() {

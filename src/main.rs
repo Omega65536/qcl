@@ -1,14 +1,18 @@
+use crate::interpreter::Interpreter;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
-use crate::syntax_error::SyntaxError;
+use crate::qcl_error::QclError;
 
+mod ast;
+mod interpreter;
 mod lexer;
 mod parser;
+mod qcl_error;
 mod span;
-mod syntax_error;
+mod token;
 
 fn main() {
-    let source = "1 - 2 / 3".to_string();
+    let source = "2 + 2".to_string();
 
     match interpret(source) {
         Ok(()) => println!("Success!"),
@@ -16,7 +20,7 @@ fn main() {
     }
 }
 
-fn interpret(source: String) -> Result<(), SyntaxError> {
+fn interpret(source: String) -> Result<(), QclError> {
     let lexer_result = Lexer::new(source.clone()).lex();
     let tokens = match lexer_result {
         Ok(tokens) => tokens,
@@ -30,5 +34,12 @@ fn interpret(source: String) -> Result<(), SyntaxError> {
         Err(error) => return Err(error),
     };
     println!("{:?}", ast);
+
+    let interpreter_result = Interpreter::new(ast).interpret();
+    let value = match interpreter_result {
+        Ok(value) => value,
+        Err(error) => return Err(error),
+    };
+    println!("{}", value);
     Ok(())
 }

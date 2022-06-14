@@ -1,17 +1,8 @@
-use crate::lexer::Token;
+use crate::ast::Expression;
+use crate::qcl_error::QclError;
 use crate::span::{Span, Spanned};
-use crate::syntax_error::SyntaxError;
+use crate::token::Token;
 use std::rc::Rc;
-
-#[derive(Debug)]
-pub enum Expression {
-    Addition(Box<Spanned<Expression>>, Box<Spanned<Expression>>),
-    Subtraction(Box<Spanned<Expression>>, Box<Spanned<Expression>>),
-    Multiplication(Box<Spanned<Expression>>, Box<Spanned<Expression>>),
-    Division(Box<Spanned<Expression>>, Box<Spanned<Expression>>),
-    Negation(Box<Spanned<Expression>>),
-    Number(f64),
-}
 
 pub struct Parser {
     source: Rc<String>,
@@ -28,15 +19,15 @@ impl Parser {
         }
     }
 
-    pub fn parse(&mut self) -> Result<Spanned<Expression>, SyntaxError> {
+    pub fn parse(&mut self) -> Result<Spanned<Expression>, QclError> {
         self.parse_expression()
     }
 
-    pub fn parse_expression(&mut self) -> Result<Spanned<Expression>, SyntaxError> {
+    pub fn parse_expression(&mut self) -> Result<Spanned<Expression>, QclError> {
         self.parse_addition()
     }
 
-    pub fn parse_addition(&mut self) -> Result<Spanned<Expression>, SyntaxError> {
+    pub fn parse_addition(&mut self) -> Result<Spanned<Expression>, QclError> {
         let mut current = self.parse_multiplication()?;
         loop {
             match self.peek().item {
@@ -63,7 +54,7 @@ impl Parser {
         }
     }
 
-    pub fn parse_multiplication(&mut self) -> Result<Spanned<Expression>, SyntaxError> {
+    pub fn parse_multiplication(&mut self) -> Result<Spanned<Expression>, QclError> {
         let mut current = self.parse_unary()?;
         loop {
             let spanned = self.peek();
@@ -91,7 +82,7 @@ impl Parser {
         }
     }
 
-    pub fn parse_unary(&mut self) -> Result<Spanned<Expression>, SyntaxError> {
+    pub fn parse_unary(&mut self) -> Result<Spanned<Expression>, QclError> {
         let current = self.peek();
         match current.item {
             Token::Number(string) => {
@@ -106,7 +97,7 @@ impl Parser {
                 let span = Span::new(self.source.clone(), current.span.start, next.span.end);
                 Ok(Spanned::new(Expression::Negation(next), span))
             }
-            _ => Err(SyntaxError::new("Failed to parse unary!".to_string())),
+            _ => Err(QclError::SyntaxError("Failed to parse unary!".to_string())),
         }
     }
 
