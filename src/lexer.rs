@@ -35,41 +35,56 @@ impl Lexer {
     pub fn next_token(&mut self) -> Result<Spanned<Token>, QclError> {
         let token = match self.peek() {
             Some(ch) => {
-                if *ch == ' ' {
+                if *ch == ' ' || *ch == '\r' {
                     self.advance();
                     return self.next_token();
                 }
                 if ch.is_digit(10) {
                     return self.next_number();
                 }
+                if ch.is_alphabetic() || *ch == '_' {
+                    return self.next_name();
+                }
                 let token = match ch {
+                    '\n' => Spanned::new(
+                        Token::Newline,
+                        Span::new(self.source.clone(), self.index, self.index),
+                    ),
                     '+' => Spanned::new(
                         Token::Plus,
-                        Span::new(self.source.clone(), self.index, self.index)
+                        Span::new(self.source.clone(), self.index, self.index),
                     ),
                     '-' => Spanned::new(
                         Token::Minus,
-                        Span::new(self.source.clone(), self.index, self.index)
+                        Span::new(self.source.clone(), self.index, self.index),
                     ),
                     '*' => Spanned::new(
                         Token::Star,
-                        Span::new(self.source.clone(), self.index, self.index)
+                        Span::new(self.source.clone(), self.index, self.index),
                     ),
                     '/' => Spanned::new(
                         Token::Slash,
-                        Span::new(self.source.clone(), self.index, self.index)
+                        Span::new(self.source.clone(), self.index, self.index),
                     ),
                     '(' => Spanned::new(
                         Token::LeftParen,
-                        Span::new(self.source.clone(), self.index, self.index)
+                        Span::new(self.source.clone(), self.index, self.index),
                     ),
                     ')' => Spanned::new(
                         Token::RightParen,
-                        Span::new(self.source.clone(), self.index, self.index)
+                        Span::new(self.source.clone(), self.index, self.index),
                     ),
-                    _ => {
+                    '{' => Spanned::new(
+                        Token::LeftCurly,
+                        Span::new(self.source.clone(), self.index, self.index),
+                    ),
+                    '}' => Spanned::new(
+                        Token::RightCurly,
+                        Span::new(self.source.clone(), self.index, self.index),
+                    ),
+                    ch => {
                         return Err(QclError::SyntaxError(
-                            "Could not handle character".to_string(),
+                            format!("Could not handle character: '{}'", ch),
                         ))
                     }
                 };
@@ -113,6 +128,24 @@ impl Lexer {
             Token::Number(string),
             Span::new(self.source.clone(), start_index, self.index - 1),
         ))
+    }
+
+    pub fn next_name(&mut self) -> Result<Spanned<Token>, QclError> {
+        let start_index = self.index;
+        let mut string = String::new();
+        while let Some(ch) = self.peek() {
+            if ch.is_alphabetic() || *ch == '_' {
+                string.push(*ch);
+            } else {
+                break;
+            }
+            self.advance();
+        }
+        let span = Span::new(self.source.clone(), start_index, self.index - 1);
+        match string.as_str() {
+            "print" => Ok(Spanned::new(Token::Print, span)),
+            _ => Ok(Spanned::new(Token::Identifier(string), span)),
+        }
     }
 
     pub fn advance(&mut self) {

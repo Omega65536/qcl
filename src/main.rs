@@ -1,3 +1,4 @@
+use std::fs;
 use crate::interpreter::Interpreter;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
@@ -12,15 +13,17 @@ mod span;
 mod token;
 
 fn main() {
-    let source = "(1 + 2) * 3".to_string();
+    let source = fs::read_to_string("example.qcl").expect("Unable to read file!");
+    println!("Source: \"\"\"{}\"\"\"", source);
 
     match interpret(source) {
-        Ok(()) => println!("Success!"),
+        Ok(()) => (),
         Err(error) => println!("{}", error),
     }
 }
 
 fn interpret(source: String) -> Result<(), QclError> {
+    println!("Lexing:");
     let lexer_result = Lexer::new(source.clone()).lex();
     let tokens = match lexer_result {
         Ok(tokens) => tokens,
@@ -28,18 +31,19 @@ fn interpret(source: String) -> Result<(), QclError> {
     };
     println!("{:?}", tokens);
 
-    let parser_result = Parser::new(source.clone(), tokens).parse();
+    println!("\nParsing:");
+    let parser_result = Parser::new(source, tokens).parse();
     let ast = match parser_result {
         Ok(ast) => ast,
         Err(error) => return Err(error),
     };
     println!("{:?}", ast);
 
+    println!("\nInterpreting:");
     let interpreter_result = Interpreter::new(ast).interpret();
-    let value = match interpreter_result {
-        Ok(value) => value,
+    match interpreter_result {
+        Ok(()) => (),
         Err(error) => return Err(error),
     };
-    println!("{}", value);
     Ok(())
 }
