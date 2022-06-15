@@ -12,7 +12,7 @@ mod span;
 mod token;
 
 fn main() {
-    let source = "2 + 2".to_string();
+    let source = "(1 + 2) * 3".to_string();
 
     match interpret(source) {
         Ok(()) => println!("Success!"),

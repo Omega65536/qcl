@@ -45,19 +45,27 @@ impl Lexer {
                 let token = match ch {
                     '+' => Spanned::new(
                         Token::Plus,
-                        Span::new(self.source.clone(), self.index, self.index),
+                        Span::new(self.source.clone(), self.index, self.index)
                     ),
                     '-' => Spanned::new(
                         Token::Minus,
-                        Span::new(self.source.clone(), self.index, self.index),
+                        Span::new(self.source.clone(), self.index, self.index)
                     ),
                     '*' => Spanned::new(
                         Token::Star,
-                        Span::new(self.source.clone(), self.index, self.index),
+                        Span::new(self.source.clone(), self.index, self.index)
                     ),
                     '/' => Spanned::new(
                         Token::Slash,
-                        Span::new(self.source.clone(), self.index, self.index),
+                        Span::new(self.source.clone(), self.index, self.index)
+                    ),
+                    '(' => Spanned::new(
+                        Token::LeftParen,
+                        Span::new(self.source.clone(), self.index, self.index)
+                    ),
+                    ')' => Spanned::new(
+                        Token::RightParen,
+                        Span::new(self.source.clone(), self.index, self.index)
                     ),
                     _ => {
                         return Err(QclError::SyntaxError(

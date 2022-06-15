@@ -90,12 +90,23 @@ impl Parser {
                 let number = string.parse().expect("Unable to parse number!");
                 let span = Span::new(self.source.clone(), current.span.start, current.span.end);
                 Ok(Spanned::new(Expression::Number(number), span))
-            }
+            },
             Token::Minus => {
                 self.advance();
                 let next = Box::new(self.parse_unary()?);
                 let span = Span::new(self.source.clone(), current.span.start, next.span.end);
                 Ok(Spanned::new(Expression::Negation(next), span))
+            },
+            Token::LeftParen => {
+                self.advance();
+                let inner = self.parse_expression()?.item;
+                let right_paren = match self.peek().item {
+                    Token::RightParen => self.peek(), 
+                    _ => return Err(QclError::SyntaxError("Expected a closing parenthesis".to_string()))
+                };
+                self.advance();
+                let span = Span::new(self.source.clone(), current.span.start, right_paren.span.end);
+                Ok(Spanned::new(inner, span))
             }
             _ => Err(QclError::SyntaxError("Failed to parse unary!".to_string())),
         }

@@ -6,4 +6,6 @@ pub enum Token {
     Minus,
     Star,
     Slash,
+    LeftParen,
+    RightParen,
 }
