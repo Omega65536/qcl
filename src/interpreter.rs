@@ -1,5 +1,5 @@
 use crate::ast::{Expression, Statement};
-use crate::qcl_error::QclError;
+use crate::qcl_error::{QclError, QclErrorType};
 use crate::span::Spanned;
 
 pub struct Interpreter {
@@ -21,11 +21,11 @@ impl Interpreter {
                 let evaluated = self.expression(expression)?;
                 println!("{}", evaluated);
                 Ok(())
-            },
+            }
             Statement::Expression(expression) => {
                 self.expression(expression)?;
                 Ok(())
-            },
+            }
             Statement::Block(statements) => {
                 for statement in statements {
                     self.interpret_statement(statement)?;
@@ -51,7 +51,11 @@ impl Interpreter {
             Expression::Division(left, right) => {
                 let right_evaluated = self.expression(right)?;
                 if right_evaluated == 0. {
-                    return Err(QclError::DivisionByZeroError(":(".to_string()));
+                    return Err(QclError::new(
+                        QclErrorType::DivisionByZeroError,
+                        expression.span.clone(),
+                        ":(".to_string(),
+                    ));
                 }
                 Ok(self.expression(&*left)? / right_evaluated)
             }

@@ -1,8 +1,9 @@
-use std::fs;
 use crate::interpreter::Interpreter;
 use crate::lexer::Lexer;
 use crate::parser::Parser;
 use crate::qcl_error::QclError;
+use env_logger::Env;
+use std::fs;
 
 mod ast;
 mod interpreter;
@@ -13,6 +14,8 @@ mod span;
 mod token;
 
 fn main() {
+    env_logger::Builder::from_env(Env::default().default_filter_or("trace")).init();
+
     let source = fs::read_to_string("example.qcl").expect("Unable to read file!");
     println!("Source: \"\"\"{}\"\"\"", source);
 

@@ -2,9 +2,9 @@ use crate::span::Spanned;
 
 #[derive(Debug)]
 pub enum Statement {
+    Block(Vec<Spanned<Statement>>),
     Print(Box<Spanned<Expression>>),
     Expression(Box<Spanned<Expression>>),
-    Block(Vec<Box<Spanned<Statement>>>),
 }
 
 #[derive(Debug)]

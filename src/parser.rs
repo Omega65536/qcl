@@ -1,8 +1,8 @@
 use crate::ast::{Expression, Statement};
-use crate::qcl_error::QclError;
+use crate::qcl_error::{QclError, QclErrorType};
 use crate::span::{Span, Spanned};
 use crate::token::Token;
-use std::fmt::format;
+use log::trace;
 use std::rc::Rc;
 
 pub struct Parser {
@@ -21,10 +21,14 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Spanned<Statement>, QclError> {
-        Ok(self.parse_statement()?)
+        trace!("Parsing");
+        let statement = self.parse_statement()?;
+        self.advance_specific(Token::End)?;
+        Ok(statement)
     }
 
     fn parse_statement(&mut self) -> Result<Spanned<Statement>, QclError> {
+        trace!("Parsing statement");
         let statement = match self.peek().item {
             Token::LeftCurly => self.parse_block(),
             Token::Print => self.parse_print(),
@@ -40,27 +44,33 @@ impl Parser {
                     span,
                 ))
             }
-        };
+        }?;
         self.advance_specific(Token::Newline)?;
-        statement
+        Ok(statement)
     }
 
     fn parse_block(&mut self) -> Result<Spanned<Statement>, QclError> {
+        trace!("Parsing block");
         let left_curly = self.advance_specific(Token::LeftCurly)?;
         let mut statements = Vec::new();
         while self.peek().item != Token::RightCurly {
             if self.peek().item == Token::Newline {
                 self.advance();
             } else {
-                statements.push(Box::new(self.parse_statement()?));
+                statements.push(self.parse_statement()?);
             }
         }
         let right_curly = self.advance_specific(Token::RightCurly)?;
-        let span = Span::new(self.source.clone(), left_curly.span.start, right_curly.span.end);
+        let span = Span::new(
+            self.source.clone(),
+            left_curly.span.start,
+            right_curly.span.end,
+        );
         Ok(Spanned::new(Statement::Block(statements), span))
     }
 
     fn parse_print(&mut self) -> Result<Spanned<Statement>, QclError> {
+        trace!("Parsing print");
         let print = self.advance_specific(Token::Print)?;
         let inner = self.parse_expression()?;
         let span = Span::new(self.source.clone(), print.span.start, inner.span.end);
@@ -68,10 +78,12 @@ impl Parser {
     }
 
     fn parse_expression(&mut self) -> Result<Spanned<Expression>, QclError> {
+        trace!("Parsing expression");
         self.parse_addition()
     }
 
     fn parse_addition(&mut self) -> Result<Spanned<Expression>, QclError> {
+        trace!("Parsing addition");
         let mut current = self.parse_multiplication()?;
         loop {
             match self.peek().item {
@@ -99,6 +111,7 @@ impl Parser {
     }
 
     fn parse_multiplication(&mut self) -> Result<Spanned<Expression>, QclError> {
+        trace!("Parsing multiplication");
         let mut current = self.parse_unary()?;
         loop {
             let spanned = self.peek();
@@ -127,6 +140,7 @@ impl Parser {
     }
 
     fn parse_unary(&mut self) -> Result<Spanned<Expression>, QclError> {
+        trace!("Parsing unary");
         let current = self.peek();
         match current.item {
             Token::Number(string) => {
@@ -152,14 +166,18 @@ impl Parser {
                 );
                 Ok(Spanned::new(inner, span))
             }
-            _ => Err(QclError::SyntaxError("Failed to parse unary!".to_string())),
+            _ => Err(QclError::new(
+                QclErrorType::SyntaxError,
+                current.span.clone(),
+                format!("Unexpected token {:?}", current.item),
+            )),
         }
     }
 
     fn peek(&self) -> Spanned<Token> {
         match self.index {
             i if i < self.tokens.len() => self.tokens[i].clone(),
-            _ => panic!("Unexpected error! :("),
+            _ => panic!("Unexpected error :("),
         }
     }
 
@@ -173,8 +191,10 @@ impl Parser {
             self.advance();
             Ok(token)
         } else {
-            Err(QclError::SyntaxError(
-                format!("Expected {:?} but found {:?}", expected, self.peek()),
+            Err(QclError::new(
+                QclErrorType::SyntaxError,
+                token.span.clone(),
+                format!("Expected {:?} but found {:?}", expected, token.item),
             ))
         }
     }

@@ -1,4 +1,4 @@
-use crate::qcl_error::QclError;
+use crate::qcl_error::{QclError, QclErrorType};
 use crate::span::{Span, Spanned};
 use crate::token::Token;
 use std::rc::Rc;
@@ -83,7 +83,9 @@ impl Lexer {
                         Span::new(self.source.clone(), self.index, self.index),
                     ),
                     ch => {
-                        return Err(QclError::SyntaxError(
+                        return Err(QclError::new(
+                            QclErrorType::SyntaxError,
+                            Span::new(self.source.clone(), self.index, self.index),
                             format!("Could not handle character: '{}'", ch),
                         ))
                     }

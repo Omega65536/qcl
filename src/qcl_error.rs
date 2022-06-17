@@ -1,16 +1,37 @@
-use std::fmt;
+use crate::span::Span;
+use colored::Colorize;
+use std::fmt::{self, Debug};
 
 #[derive(Debug)]
-pub enum QclError {
-    SyntaxError(String),
-    DivisionByZeroError(String),
+pub enum QclErrorType {
+    SyntaxError,
+    DivisionByZeroError,
+}
+
+#[derive(Debug)]
+pub struct QclError {
+    error_type: QclErrorType,
+    span: Span,
+    message: String,
+}
+
+impl QclError {
+    pub fn new(error_type: QclErrorType, span: Span, message: String) -> QclError {
+        QclError {
+            error_type,
+            span,
+            message,
+        }
+    }
 }
 
 impl fmt::Display for QclError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            QclError::SyntaxError(message) => write!(f, "SyntaxError: {}", message),
-            QclError::DivisionByZeroError(message) => write!(f, "DivisionByZeroError: {}", message),
-        }
+        write!(
+            f,
+            "{}\n{}",
+            self.span,
+            format!("{:?}: {}", self.error_type, self.message).bright_red()
+        )
     }
 }
