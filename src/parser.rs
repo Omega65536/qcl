@@ -149,6 +149,11 @@ impl Parser {
                 let span = Span::new(self.source.clone(), current.span.start, current.span.end);
                 Ok(Spanned::new(Expression::Number(number), span))
             }
+            Token::Identifier(string) => {
+                self.advance();
+                let span = Span::new(self.source.clone(), current.span.start, current.span.end);
+                Ok(Spanned::new(Expression::Name(string), span))
+            }
             Token::Minus => {
                 self.advance();
                 let next = Box::new(self.parse_unary()?);
@@ -169,7 +174,7 @@ impl Parser {
             _ => Err(QclError::new(
                 QclErrorType::SyntaxError,
                 current.span.clone(),
-                format!("Unexpected token {:?}", current.item),
+                format!("Could not handle {}", current.item),
             )),
         }
     }
@@ -194,7 +199,7 @@ impl Parser {
             Err(QclError::new(
                 QclErrorType::SyntaxError,
                 token.span.clone(),
-                format!("Expected {:?} but found {:?}", expected, token.item),
+                format!("Expected {} but found {}", expected, token.item),
             ))
         }
     }

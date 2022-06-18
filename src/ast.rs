@@ -10,6 +10,7 @@ pub enum Statement {
 #[derive(Debug)]
 pub enum Expression {
     Number(f64),
+    Name(String),
     Negation(Box<Spanned<Expression>>),
     Addition(Box<Spanned<Expression>>, Box<Spanned<Expression>>),
     Subtraction(Box<Spanned<Expression>>, Box<Spanned<Expression>>),
